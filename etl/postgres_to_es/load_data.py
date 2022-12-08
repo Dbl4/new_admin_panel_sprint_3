@@ -10,9 +10,9 @@ from elasticsearch import Elasticsearch
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
 
-from postgres_to_es.etl import ETLProcess
-from postgres_to_es.settings import index_name, index_settings
-from postgres_to_es.state import State, JsonFileStorage
+from etl import ETLProcess
+from settings import index_name, index_settings
+from state import State, JsonFileStorage
 
 load_dotenv()
 

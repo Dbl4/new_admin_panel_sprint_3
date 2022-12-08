@@ -6,8 +6,8 @@ from functools import wraps
 from elasticsearch import helpers, Elasticsearch
 from psycopg2.extensions import connection as _connection
 
-from postgres_to_es.loader import PostgresLoader
-from postgres_to_es.state import State
+from loader import PostgresLoader
+from state import State
 
 
 def backoff(start_sleep_time=0.1, factor=2, border_sleep_time=10):
