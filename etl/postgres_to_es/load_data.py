@@ -32,7 +32,6 @@ def load_from_postgres(pg_conn: _connection, es_object: Elasticsearch, state: St
 
         etl.loader(transform_data, new_state)
         logging.info('Data saved in ElasticSearch')
-        time.sleep(10)
 
 
 if __name__ == '__main__':
@@ -47,6 +46,8 @@ if __name__ == '__main__':
     }
     # создадим экземпляр состояния
     state = State(JsonFileStorage('state.txt'))
-    # подключаем постгрес  делаем загрузку в эластик
-    with psycopg2.connect(**dsl, cursor_factory=DictCursor) as pg_conn:
-        load_from_postgres(pg_conn, es_object, state)
+    while True:
+        # подключаем постгрес  делаем загрузку в эластик
+        with psycopg2.connect(**dsl, cursor_factory=DictCursor) as pg_conn:
+            load_from_postgres(pg_conn, es_object, state)
+        time.sleep(500)
