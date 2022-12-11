@@ -1,0 +1,4 @@
+/etl/.env
+/etl/app/.env
+/etl/postgres_to_es/.env
+/etl/sqlite_to_postgres/.env
