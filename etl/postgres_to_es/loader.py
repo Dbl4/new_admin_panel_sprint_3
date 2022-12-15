@@ -4,6 +4,7 @@ from psycopg2.extensions import connection as _connection
 class PostgresLoader:
     def __init__(self, pg_conn: _connection) -> None:
         self.connection = pg_conn
+        self.batch = 100
 
     def load_data(self, films_works_id: tuple) -> dict:
         """Загрузка всех данных из Postgres для последующей вставки в ElasticSearch"""
@@ -48,7 +49,7 @@ class PostgresLoader:
             GROUP BY fw.id
             ORDER BY fw.modified""")
 
-        record = curs.fetchall()
+        record = curs.fetchmany(size=self.batch)
         return record
 
     def get_films_id(self, state: dict) -> (list, dict):
@@ -64,12 +65,15 @@ class PostgresLoader:
                 ORDER BY modified
                 LIMIT 100;""")
 
-        data = curs.fetchall()
+        data = curs.fetchmany(size=self.batch)
         films_id = []
         for elem in data:
             films_id.append(elem.get('id'))
 
         new_state = data[-1].get('modified') if data else state
+
+        # в том случае, если выгружается всего лишь один фильм, необходимо преобразовать к валидному формату
+        films_id = f"('{films_id[0]}')" if len(films_id) == 1 else tuple(films_id)
 
         return films_id, new_state
 

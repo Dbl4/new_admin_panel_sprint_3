@@ -48,10 +48,3 @@ class State:
         """Получить состояние по определённому ключу"""
         return self.storage.retrieve_state().get(key)
 
-
-# js_stor = JsonFileStorage('file_path.txt')
-# st = State(js_stor)
-#
-#
-# st.set_state('1', 'abcdfgj')
-# print(st.get_state('1'))

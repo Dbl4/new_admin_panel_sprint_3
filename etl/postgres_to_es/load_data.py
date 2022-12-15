@@ -1,20 +1,17 @@
 """Основной файл для загрузки данных из postgres в ElasticSearch"""
 
 import logging
-import os
 import time
 
 import psycopg2
-from dotenv import load_dotenv
+
+from settings import ELASTICSEARCH, STORAGE, DATABASE
 from elasticsearch import Elasticsearch
 from psycopg2.extensions import connection as _connection
 from psycopg2.extras import DictCursor
 
 from etl import ETLProcess
-from settings import index_name, index_settings
 from state import State, JsonFileStorage
-
-load_dotenv()
 
 
 def load_from_postgres(pg_conn: _connection, es_object: Elasticsearch, state: State) -> None:
@@ -24,30 +21,23 @@ def load_from_postgres(pg_conn: _connection, es_object: Elasticsearch, state: St
         data, new_state = etl.extract()
         logging.info('Data taken from Postgres')
 
-        if not data:
+        if len(data) == 0:
             logging.info('Download completed successfully')
             return
 
-        transform_data = etl.transform(data, index_name, index_settings)
+        transform_data = etl.transform(data)
 
-        etl.loader(transform_data, new_state)
+        etl.load(transform_data, new_state)
         logging.info('Data saved in ElasticSearch')
 
 
 if __name__ == '__main__':
-    es_object = Elasticsearch([{"host": os.environ.get('EL_HOST', '127.0.0.1'),
-                                "port": os.environ.get('El_PORT', 9200)}])
-    dsl = {
-        'dbname': os.environ.get('DB_NAME'),
-        'user': os.environ.get('DB_USER'),
-        'password': os.environ.get('DB_PASSWORD'),
-        'host': os.environ.get('DB_HOST', '127.0.0.1'),
-        'port': os.environ.get('DB_PORT', 5432)
-    }
+    es_object = Elasticsearch(ELASTICSEARCH)
     # создадим экземпляр состояния
-    state = State(JsonFileStorage('state.txt'))
+    state = State(JsonFileStorage(STORAGE))
     while True:
         # подключаем постгрес  делаем загрузку в эластик
-        with psycopg2.connect(**dsl, cursor_factory=DictCursor) as pg_conn:
+        with psycopg2.connect(**DATABASE, cursor_factory=DictCursor) as pg_conn:
             load_from_postgres(pg_conn, es_object, state)
-        time.sleep(500)
+        pg_conn.close()
+        time.sleep(100)
