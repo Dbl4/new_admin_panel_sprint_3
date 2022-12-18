@@ -1,12 +1,35 @@
+import abc
+from typing import TypeVar
+
 from psycopg2.extensions import connection as _connection
 
 
 class PostgresLoader:
-    def __init__(self, pg_conn: _connection) -> None:
+    def __init__(self, pg_conn: _connection, batch: int = 100) -> None:
         self.connection = pg_conn
-        self.batch = 100
+        self.batch = batch
 
-    def load_data(self, films_works_id: tuple) -> dict:
+    @abc.abstractmethod
+    def load_data(self, models_id: tuple) -> dict:
+        """Загрузка всех данных из Postgres для последующей вставки в ElasticSearch"""
+        pass
+
+    @abc.abstractmethod
+    def get_models_id(self, state: dict) -> (list, dict):
+        """Получить id загружаемой модели и новое состояние
+        (последняя дата изменения модели modified)"""
+        pass
+
+    def get_cursor(self):
+        return self.connection.cursor()
+
+
+# для аннотации всех дочерних объектов класса PostgresLoader
+T = TypeVar("T", bound=PostgresLoader)
+
+
+class MoviesLoader(PostgresLoader):
+    def load_data(self, models_id: tuple) -> dict:
         """Загрузка всех данных из Postgres для последующей вставки в ElasticSearch"""
         curs = self.get_cursor()
         curs.execute(
@@ -45,14 +68,14 @@ class PostgresLoader:
             LEFT JOIN content.person p ON p.id = pfw.person_id
             LEFT JOIN content.genre_film_work gfw ON gfw.film_work_id = fw.id
             LEFT JOIN content.genre g ON g.id = gfw.genre_id
-            WHERE fw.id IN {films_works_id}
+            WHERE fw.id IN {models_id}
             GROUP BY fw.id
             ORDER BY fw.modified""")
 
         record = curs.fetchmany(size=self.batch)
         return record
 
-    def get_films_id(self, state: dict) -> (list, dict):
+    def get_models_id(self, state: dict) -> (list, dict):
         """Получить id фильмов и новое состояние (последняя дата изменения фильма modified)"""
         curs = self.get_cursor()
         curs.execute(
@@ -76,6 +99,3 @@ class PostgresLoader:
         films_id = f"('{films_id[0]}')" if len(films_id) == 1 else tuple(films_id)
 
         return films_id, new_state
-
-    def get_cursor(self):
-        return self.connection.cursor()

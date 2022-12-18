@@ -1,18 +1,18 @@
 import json
 import logging
 
-from elasticsearch import helpers
+from elasticsearch import helpers, Elasticsearch
 
 
 class ElSearchSaver:
-    def __init__(self, es_object):
+    def __init__(self, es_object: Elasticsearch) -> None:
         self.es_object = es_object
 
     def bulk_save(self, transform_data: list) -> None:
         """Загрузить пачкой документов в индекс"""
         helpers.bulk(self.es_object, transform_data)
 
-    def create_index(self, name: str, settings: dict) -> bool:
+    def create_index(self, name: str, settings: str) -> bool:
         """Создать индекс"""
         try:
             self.es_object.indices.create(index=name, body=settings)
