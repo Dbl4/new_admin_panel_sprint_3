@@ -15,6 +15,7 @@
 - [Docker](https://www.docker.com/) - is a set of platform as a service (PaaS) products that use OS-level virtualization to deliver software in packages (containers).
 - [Gunicorn](https://gunicorn.org/) - is a Python WSGI HTTP Server for UNIX.
 - [Nginx](https://nginx.org/) - is a web server that can also be used as a reverse proxy, load balancer, mail proxy and HTTP cache.
+- [Elasticsearch](https://www.elastic.co/elasticsearch/) - is the distributed, RESTful search and analytics engine at the heart of the Elastic Stack. You can use Elasticsearch to store, search, and manage data.
 
 ## Как развернуть проект
 - скачать репозиторий, перейти в директорию с ```docker-compose.yml```
@@ -49,9 +50,18 @@ INDEX_SETTINGS
 ````
 В ```INDEX_SETTINGS``` устанавливаем схему. 
 Используйте предложенную [cхему индекса](https://code.s3.yandex.net/middle-python/learning-materials/es_schema.txt)💾  `movies`, в которую должна производиться загрузка фильмов.
-- Собрать и запустить докер-сборку
+- добавить ```.env``` в директории:
+````
+/etl
+/etl/app
+/etl/sqlite_to_postgres/
+/etl/postgres_to_es
+````
+- собрать и запустить докер-сборку
 
 ```docker-compose up -d --build```
 
 ```docker-compose up```
+
+- перейти в панель администратора http://localhost:8000/admin
 
